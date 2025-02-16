@@ -1,0 +1,15 @@
+---
+
+workspace: /root
+hostname: kvmhost
+
+ntp_timezone: America/Boise
+
+appliances:
+  aws_commercial:
+    devcomm-sgw:
+      hardware:
+        cpu_allocation: 2
+        mem_allocation: 6000
+        primary_disk: 80
+        cache_disk: 40

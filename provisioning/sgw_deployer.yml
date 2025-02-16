@@ -1,0 +1,72 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+  - name: Check Prereqs
+    package:
+      name:
+      - qemu-kvm-core
+      - qemu-kvm-tools
+      - libvirt
+      - virt-manager
+      - virt-install
+      - virt-viewer
+      - virt-top
+      - libguestfs-tools
+      - libvirt-daemon-config-network
+      - unzip
+      state: present
+
+  - name: Get VM List
+    community.libvirt.virt:
+      command: list_vms
+    register: existing_vms
+    changed_when: no
+
+- hosts: all
+  become: true
+  vars_files:
+    - vars/sgw_kvm.yml
+  vars:
+    local_archive_dir: /opt/aws-sg-vm-files
+  tasks:
+  - name: Create Live VM Disk Target Dir
+    ansible.builtin.file:
+      path: "{{ local_archive_dir }}/live-vm-disks/"
+      state: directory
+      mode: "0740"
+      owner: qemu
+      group: qemu
+
+  - name: Provision AWS Commercial Virtual Disks
+    ansible.builtin.copy:
+      src: "{{ local_archive_dir }}/commercial/prod-us-east-1/prod-us-east-1.qcow2"
+      dest: "{{ local_archive_dir }}/live-vm-disks/{{ item.key }}-commercial-primary-disk.qcow2"
+      mode: "0600"
+      owner: qemu
+      group: qemu
+      unsafe_writes: false
+      remote_src: yes
+      force: false
+    when: item.key not in existing_vms.list_vms
+    loop: "{{ appliances['aws_commercial'] | dict2items }}"
+
+  - name: Initialize AWS Commercial Storage Gateway Appliances
+    ansible.builtin.shell: >
+      virt-install 
+      --name "{{ item.key }}" 
+      --description "{{ item.key }} Storage Gateway VM" 
+      --os-variant=rhel9-unknown 
+      --ram={{ item.value.hardware.mem_allocation }} 
+      --vcpus={{ item.value.hardware.cpu_allocation }} 
+      --disk path={{ local_archive_dir }}/live-vm-disks/{{ item.key }}-commercial-primary-disk.qcow2,bus=virtio,size={{ item.value.hardware.primary_disk }} 
+      --disk path={{ local_archive_dir }}/live-vm-disks/{{ item.key }}-commercial-cache-disk.qcow2,bus=virtio,size={{ item.value.hardware.cache_disk }} 
+      --network default,model=virtio 
+      --serial pty,target_type=isa-serial 
+      --console pty,target_type=serial 
+      --graphics vnc,listen="127.0.0.1",keymap=local 
+      --autoconsole none 
+      --import
+    when: item.key not in existing_vms.list_vms
+    loop: "{{ appliances['aws_commercial'] | dict2items }}"

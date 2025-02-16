@@ -1,0 +1,79 @@
+---
+
+# NTP is required for vm appliances.
+- name: Setup NTP
+  hosts: all
+  become: true
+  gather_facts: yes
+  vars_files:
+    - vars/sgw_kvm.yml
+  roles:
+    - geerlingguy.ntp
+
+- name: Install KVM
+  hosts: all
+  become: true
+  tasks:
+  - name: Install KVM Base System
+    dnf:
+      name: "{{ item }}"
+      state: installed
+    loop:
+      - qemu-kvm-core
+      - qemu-kvm-tools
+      - libvirt
+      - virt-manager
+      - virt-install
+      - virt-viewer
+      - virt-top
+      - libguestfs-tools
+      - libvirt-daemon-config-network
+      - unzip
+
+  - name: Enable and Start Libvirtd
+    ansible.builtin.systemd_service:
+      state: started
+      enabled: true
+      name: libvirtd
+
+- name: Download VM Templates from AWS
+  hosts: all
+  become: true
+  vars_files:
+    - vars/sgw_kvm.yml
+  vars:
+    commercial_dl_location: https://dd958of58tzpr.cloudfront.net
+    aws_dl_filename: aws-storage-gateway-file-s3.kvm.zip
+    target_directory: /opt/aws-sg-vm-files
+  tasks:
+  - name: Create Landing Dir
+    ansible.builtin.file:
+      path: "{{ target_directory }}/"
+      state: directory
+      mode: "0740"
+      owner: qemu
+      group: qemu
+
+  - name: Download AWS Commercial SG Appliance Template
+    ansible.builtin.get_url:
+      url: "{{ commercial_dl_location }}/{{ aws_dl_filename }}"
+      dest: "{{ target_directory }}/commercial-{{ aws_dl_filename }}"
+      mode: "0600"
+      owner: root
+      group: root
+      validate_certs: true
+
+  - name: Create AWS Commercial Archive Target Dir
+    ansible.builtin.file:
+      path: "{{ target_directory }}/commercial/"
+      state: directory
+      mode: "0600"
+      owner: root
+      group: root
+
+  - name: Extract AWS Commercial Base Image
+    ansible.builtin.unarchive:
+      src: "{{ target_directory }}/commercial-{{ aws_dl_filename }}"
+      dest: "{{ target_directory }}/commercial/"
+      remote_src: yes
+      creates: "{{ target_directory }}/commercial/prod-us-east-1/"
