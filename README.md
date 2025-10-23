@@ -1,114 +1,52 @@
-## Ansible Playbooks for AWS Storage Gateway on RHEL9
+# Ansible Playbooks for AWS Storage Gateway on RHEL9
 
-Playbooks to deploy multiple AWS Storage Gateway File Gateway appliances on RHEL9/KVM. Supports AWS Commercial partition. Full Readme coming soon!
+Ansible playbooks to deploy multiple AWS Storage Gateway File Gateway appliances on RHEL9/KVM. Supports AWS Commercial partition.
 
-### Usage
+## Prerequisites
+
+- RHEL 9 host with KVM support
+- Ansible 2.9 or higher
+- AWS account with appropriate permissions
+- Sufficient disk space for VM images and virtual disks
+
+## Usage
+
+### Deploy Storage Gateway
 
 ```bash
-ansible here
+ansible-playbook -i inventory site.yml
 ```
 
-### Integration Testing
+### Configuration
 
-##### Pre-requisites
+Edit your inventory file and configure the storage gateway appliances according to your requirements. Adjust hardware specifications (CPU, memory, disk sizes) as needed.
+
+## Integration Testing
+
+### Prerequisites
 
 - Vagrant 2.4.3
 - VirtualBox 6.1
 
-##### Running Tests
+### Running Tests
 
 ```bash
 vagrant up
 ```
 
-##### Sample Test Output
+### Sample Test Output
 
-```bash
-</SNIP!>
-PLAY [Install KVM] *************************************************************
+The test suite performs the following operations:
 
-TASK [Gathering Facts] *********************************************************
-ok: [kvmhost]
+1. **Install KVM** - Installs required KVM packages and enables libvirtd
+2. **Download VM Templates** - Downloads AWS Storage Gateway appliance templates
+3. **Provision Virtual Disks** - Creates primary and cache disks for each gateway
+4. **Initialize Appliances** - Deploys and configures Storage Gateway VMs
 
-TASK [Install KVM Base System] *************************************************
-changed: [kvmhost] => (item=qemu-kvm-core)
-changed: [kvmhost] => (item=qemu-kvm-tools)
-changed: [kvmhost] => (item=libvirt)
-changed: [kvmhost] => (item=virt-manager)
-changed: [kvmhost] => (item=virt-install)
-changed: [kvmhost] => (item=virt-viewer)
-changed: [kvmhost] => (item=virt-top)
-changed: [kvmhost] => (item=libguestfs-tools)
-ok: [kvmhost] => (item=libvirt-daemon-config-network)
-changed: [kvmhost] => (item=unzip)
-
-TASK [Enable and Start Libvirtd] ***********************************************
-changed: [kvmhost]
-
-PLAY [Download VM Templates from AWS] ******************************************
-
-TASK [Gathering Facts] *********************************************************
-ok: [kvmhost]
-
-TASK [Create Landing Dir] ******************************************************
-changed: [kvmhost]
-
-TASK [Download AWS GovCloud SG Appliance Template] *****************************
-changed: [kvmhost]
-
-TASK [Download AWS Commercial SG Appliance Template] ***************************
-changed: [kvmhost]
-
-TASK [Create AWS GovCloud Archive Target Dir] **********************************
-changed: [kvmhost]
-
-TASK [Create AWS Commercial Archive Target Dir] ********************************
-changed: [kvmhost]
-
-TASK [Extract AWS GovCloud Base Image] *****************************************
-changed: [kvmhost]
-
-TASK [Extract AWS Commercial Base Image] ***************************************
-changed: [kvmhost]
-
+Example successful run:
+```
 PLAY RECAP *********************************************************************
-kvmhost                    : ok=22   changed=10   unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
-
-==> kvmhost: Running provisioner: ansible...
-    kvmhost: Running ansible-playbook...
-
-PLAY [all] *********************************************************************
-
-TASK [Gathering Facts] *********************************************************
-[WARNING]: Platform linux on host kvmhost is using the discovered Python
-interpreter at /usr/bin/python3.9, but future installation of another Python
-interpreter could change the meaning of that path. See
-https://docs.ansible.com/ansible-
-core/2.18/reference_appendices/interpreter_discovery.html for more information.
-ok: [kvmhost]
-
-TASK [Check Prereqs] ***********************************************************
-ok: [kvmhost]
-
-TASK [Get VM List] *************************************************************
-ok: [kvmhost]
-
-PLAY [all] *********************************************************************
-
-TASK [Gathering Facts] *********************************************************
-ok: [kvmhost]
-
-TASK [Create Live VM Disk Target Dir] ******************************************
-changed: [kvmhost]
-
-TASK [Provision AWS Commercial Virtual Disks] **********************************
-changed: [kvmhost] => (item={'key': 'devcomm-sgw', 'value': {'hardware': {'cpu_allocation': 2, 'mem_allocation': 6000, 'primary_disk': 80, 'cache_disk': 40}}})
-
-TASK [Initialize AWS Commercial Storage Gateway Appliances] ********************
-changed: [kvmhost] => (item={'key': 'devcomm-sgw', 'value': {'hardware': {'cpu_allocation': 2, 'mem_allocation': 6000, 'primary_disk': 80, 'cache_disk': 40}}})
-
-PLAY RECAP *********************************************************************
-kvmhost                    : ok=9    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+kvmhost                    : ok=9    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
 ## Authors
