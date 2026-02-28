@@ -58,6 +58,7 @@
     ansible.builtin.get_url:
       url: "{{ commercial_dl_location }}/{{ aws_dl_filename }}"
       dest: "{{ target_directory }}/commercial-{{ aws_dl_filename }}"
+      checksum: "{{ aws_dl_checksum }}"
       mode: "0600"
       owner: root
       group: root

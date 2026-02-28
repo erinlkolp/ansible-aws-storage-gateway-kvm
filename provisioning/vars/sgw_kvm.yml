@@ -5,6 +5,11 @@ hostname: kvmhost
 
 ntp_timezone: America/Boise
 
+# FIXME: Obtain the current SHA256 checksum from the AWS Management Console at
+# the time of download (Storage Gateway > Create Gateway > Linux KVM > Download
+# Image). Update this value whenever the appliance image is refreshed by AWS.
+aws_dl_checksum: "sha256:FIXME"
+
 appliances:
   aws_commercial:
     devcomm-sgw:
