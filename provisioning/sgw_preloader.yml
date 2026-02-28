@@ -4,7 +4,7 @@
 - name: Setup NTP
   hosts: all
   become: true
-  gather_facts: yes
+  gather_facts: true
   vars_files:
     - vars/sgw_kvm.yml
   roles:
@@ -15,7 +15,7 @@
   become: true
   tasks:
   - name: Install KVM Base System
-    dnf:
+    ansible.builtin.dnf:
       name: "{{ item }}"
       state: installed
     loop:
@@ -50,7 +50,7 @@
     ansible.builtin.file:
       path: "{{ target_directory }}/"
       state: directory
-      mode: "0740"
+      mode: "0750"
       owner: qemu
       group: qemu
 
@@ -76,5 +76,5 @@
     ansible.builtin.unarchive:
       src: "{{ target_directory }}/commercial-{{ aws_dl_filename }}"
       dest: "{{ target_directory }}/commercial/"
-      remote_src: yes
+      remote_src: true
       creates: "{{ target_directory }}/commercial/prod-us-east-1/"
